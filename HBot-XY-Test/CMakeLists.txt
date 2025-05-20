@@ -28,30 +28,33 @@ set(PICO_BOARD pico2 CACHE STRING "Board type")
 # Pull in Raspberry Pi Pico SDK (must be before project)
 include(pico_sdk_import.cmake)
 
-project(Hbot_Control C CXX ASM)
+project(HBotCharge C CXX ASM)
 
 # Initialise the Raspberry Pi Pico SDK
 pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(Hbot_Control Hbot_Control.c )
+add_executable(HBotCharge HBotCharge.c )
 
-pico_set_program_name(Hbot_Control "Hbot_Control")
-pico_set_program_version(Hbot_Control "0.1")
+pico_set_program_name(HBotCharge "HBotCharge")
+pico_set_program_version(HBotCharge "0.1")
 
 # Modify the below lines to enable/disable output over UART/USB
-pico_enable_stdio_uart(Hbot_Control 0)
-pico_enable_stdio_usb(Hbot_Control 0)
+pico_enable_stdio_uart(HBotCharge 0)
+pico_enable_stdio_usb(HBotCharge 1)
 
 # Add the standard library to the build
-target_link_libraries(Hbot_Control
-         pico_stdlib hardware_pwm hardware_gpio hardware_uart)
+target_link_libraries(HBotCharge
+        pico_stdlib
+        hardware_gpio
+        pico_stdio
+        pico_stdio_usb)
 
 # Add the standard include files to the build
-target_include_directories(Hbot_Control PRIVATE
+target_include_directories(HBotCharge PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
 )
 
-pico_add_extra_outputs(Hbot_Control)
+pico_add_extra_outputs(HBotCharge)
 
