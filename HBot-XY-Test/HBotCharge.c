@@ -5,6 +5,11 @@
 #include "pico/stdlib.h"
 #include "hardware/gpio.h"
 
+// The dimensions of the Hbot's build plate is:
+// (x, y) = (420, 375)
+// The origin is at the top left
+// Manually calibrate to origin before power on
+
 // Constants
 #define STEPS_PER_MM 80
 #define MMPERSTEP (1.0f / STEPS_PER_MM)
@@ -109,7 +114,8 @@ void MoveToPosition(float x, float y) {
     }
 }
 
-int main() {
+// Initialize hardware components
+void initialize_hardware() {
     // Initialize stdio
     stdio_init_all();
     
@@ -127,81 +133,83 @@ int main() {
     
     // Wait for serial connection before starting
     printf("Waiting for serial connection...\n");
-    while (!stdio_usb_connected()) {
-        sleep_ms(100);  // Check every 100ms
-    }
-    
-    printf("\nH-Bot Motion Control Starting...\n");
-    printf("Step pulse width: %d microseconds (lower = faster)\n", STEP_PULSE_WIDTH);
-    
-    // Variables for command processing
+}
+
+// Process user input and execute commands
+void process_user_input() {
     char buffer[64];
     float x, y;
     int pos = 0;
     int c;
+
+    printf("Enter coordinates:");
     
-    // Show instructions and initial prompt
-    printf("\nEnter coordinates as 'X Y'\n");
-    printf("Example: 100 200\n");
-    printf("Command> ");
+    // Wait for and collect a full command line
+    pos = 0;
+    memset(buffer, 0, sizeof(buffer));
+    
+    while (pos < sizeof(buffer) - 1) {
+        // Get a character with timeout
+        c = getchar_timeout_us(10000);  // 10ms timeout for better responsiveness
+        
+        if (c != PICO_ERROR_TIMEOUT) {
+            // Process Enter key (end of command)
+            if (c == '\r' || c == '\n') {
+                putchar('\n');  // Echo newline
+                break;  // End of command input
+            }
+            // Process backspace
+            else if (c == '\b' || c == 127) {
+                if (pos > 0) {
+                    pos--;
+                    printf("\b \b");  // Backspace, space, backspace to erase character
+                }
+            }
+            // Process printable characters
+            else if (c >= 32 && c <= 126) {
+                putchar(c);  // Echo character
+                buffer[pos++] = (char)c;
+            }
+        }
+        sleep_ms(1);  // Small delay to prevent CPU hogging
+    }
+    
+    // Null-terminate the buffer
+    buffer[pos] = '\0';
+    
+    // Process the command if we got something
+    if (pos > 0) {
+        // Trim leading spaces
+        char* cmd = buffer;
+        while (*cmd == ' ') cmd++;
+        
+        // Debug output - show raw input
+        printf("Received: '%s'\n", cmd);
+        
+        // Try to parse as two numbers directly
+        if (sscanf(cmd, "%f %f", &x, &y) == 2) {
+            printf("Moving to position (%.1f, %.1f)...\n", x, y);
+            MoveToPosition(x, y);
+            printf("Movement complete!\n");
+        } else {
+            printf("Error: Invalid format. Please enter two numbers: X Y\n");
+        }
+    }
+}
+
+int main() {
+    // Initialize hardware components
+    initialize_hardware();
+
+    // Wait for serial connection before starting
+    while (!stdio_usb_connected()) {
+        sleep_ms(100);  // Check every 100ms
+    }
     
     // Main command processing loop
     while (true) {
-        // Wait for and collect a full command line
-        pos = 0;
-        memset(buffer, 0, sizeof(buffer));
-        
-        while (pos < sizeof(buffer) - 1) {
-            // Get a character with timeout
-            c = getchar_timeout_us(10000);  // 10ms timeout for better responsiveness
-            
-            if (c != PICO_ERROR_TIMEOUT) {
-                // Process Enter key (end of command)
-                if (c == '\r' || c == '\n') {
-                    putchar('\n');  // Echo newline
-                    break;  // End of command input
-                }
-                // Process backspace
-                else if (c == '\b' || c == 127) {
-                    if (pos > 0) {
-                        pos--;
-                        printf("\b \b");  // Backspace, space, backspace to erase character
-                    }
-                }
-                // Process printable characters
-                else if (c >= 32 && c <= 126) {
-                    putchar(c);  // Echo character
-                    buffer[pos++] = (char)c;
-                }
-            }
-            sleep_ms(1);  // Small delay to prevent CPU hogging
-        }
-        
-        // Null-terminate the buffer
-        buffer[pos] = '\0';
-        
-        // Process the command if we got something
-        if (pos > 0) {
-            // Trim leading spaces
-            char* cmd = buffer;
-            while (*cmd == ' ') cmd++;
-            
-            // Debug output - show raw input
-            printf("Received: '%s'\n", cmd);
-            
-            // Try to parse as two numbers directly
-            if (sscanf(cmd, "%f %f", &x, &y) == 2) {
-                printf("Moving to position (%.1f, %.1f)...\n", x, y);
-                MoveToPosition(x, y);
-                printf("Movement complete!\n");
-            } else {
-                printf("Error: Invalid format. Please enter two numbers: X Y\n");
-            }
-        }
-        
-        // Show prompt for next command
-        printf("Command> ");
+        process_user_input();
     }
-    
-    return 0;  // Should never reach here
+
+    return 0;
 }
