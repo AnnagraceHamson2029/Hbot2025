@@ -35,7 +35,16 @@ pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(HBotCharge HBotCharge.c )
+# Source files for the HBotCharge project
+set(SOURCES
+    main.c
+    hbot_hardware.c
+    hbot_movement.c
+    hbot_grid.c
+    hbot_input.c
+)
+
+add_executable(HBotCharge ${SOURCES})
 
 pico_set_program_name(HBotCharge "HBotCharge")
 pico_set_program_version(HBotCharge "0.1")
@@ -54,6 +63,7 @@ target_link_libraries(HBotCharge
 # Add the standard include files to the build
 target_include_directories(HBotCharge PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
+        ${CMAKE_CURRENT_LIST_DIR}/include
 )
 
 pico_add_extra_outputs(HBotCharge)
