@@ -6,6 +6,7 @@
 
 #include "include/hbot_grid.h"
 #include "include/hbot_movement.h"
+#include "include/hbot_position_tracker.h"
 
 // Configurable Battery Grid vars
 float fork_y = 43.561f; // Height of forklift prongs in mm (measured from CAD model on 05/29/25)
@@ -68,19 +69,36 @@ void MoveToCoord(int x, int y) {
         return;
     }
     
-    // Move to center channel
-    if (x_mm_pos != x_channel) {
-        MoveToCenterChannel();
-        printf("Moved to center channel\r\n");
+    // Get current grid position
+    int current_x, current_y;
+    bool in_grid;
+    get_current_grid_position(&current_x, &current_y, &in_grid);
+    
+    // Target Y position in mm
+    float target_y_mm = (ystep)*y*2;
+    
+    // Check if we're already in the correct row (Y position)
+    if (in_grid && current_y == y) {
+        printf("Already in row %d, moving directly to column %d\r\n", y, x);
+        // Move directly to the target X position
+        MoveToPosition(x_channel + xstep*x, y_mm_pos);
+        printf("Moved to x channel %d\r\n", x);
+    } else {
+        // Standard movement pattern via center channel
+        // Move to center channel if not already there
+        if (x_mm_pos != x_channel) {
+            MoveToCenterChannel();
+            printf("Moved to center channel\r\n");
+        }
+
+        // Move to desired battery row (y)
+        MoveToPosition(x_mm_pos, target_y_mm);
+        printf("Moved to y channel %d\r\n", y);
+
+        // Move to desired battery column (x)
+        MoveToPosition(x_channel + xstep*x, y_mm_pos);
+        printf("Moved to x channel %d\r\n", x);
     }
-
-    // Move to desired battery row (y)
-    MoveToPosition(x_mm_pos, (ystep)*y*2);
-    printf("Moved to y channel %d\r\n", y);
-
-    // Move to desired battery column (x)
-    MoveToPosition(x_channel + xstep*x, y_mm_pos);
-    printf("Moved to x channel %d\r\n", x);
 }
 
 void DepositBattery() {
@@ -91,8 +109,21 @@ void DepositBattery() {
 }
 
 void DepositBatteryXY(int x, int y) {
-    MoveToCoord(x, y);
-    DepositBattery();
+    // Get current grid position
+    int current_x, current_y;
+    bool in_grid;
+    get_current_grid_position(&current_x, &current_y, &in_grid);
+    
+    // Check if we're already at the target position
+    if (in_grid && current_x == x && current_y == y) {
+        printf("Already at position (%d, %d), depositing battery\r\n", x, y);
+        // We're already at the right spot, just deposit
+        DepositBattery();
+    } else {
+        // Need to move to the position first
+        MoveToCoord(x, y);
+        DepositBattery();
+    }
 }
 
 void ScoopBattery() {
@@ -100,6 +131,19 @@ void ScoopBattery() {
 }
 
 void ScoopBatteryXY(int x, int y) {
-    MoveToCoord(x, y);
-    ScoopBattery();
+    // Get current grid position
+    int current_x, current_y;
+    bool in_grid;
+    get_current_grid_position(&current_x, &current_y, &in_grid);
+    
+    // Check if we're already at the target position
+    if (in_grid && current_x == x && current_y == y) {
+        printf("Already at position (%d, %d), scooping battery\r\n", x, y);
+        // We're already at the right spot, just scoop
+        ScoopBattery();
+    } else {
+        // Need to move to the position first
+        MoveToCoord(x, y);
+        ScoopBattery();
+    }
 }
