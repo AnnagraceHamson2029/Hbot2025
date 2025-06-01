@@ -1,7 +1,13 @@
 
 
+//////////
+// Movement functions
+// Controls the gantry movement in both raw mm coordinates and grid positions
+//////////
+
 #include "include/hbot_movement.h"
 #include "include/hbot_hardware.h"
+#include "include/hbot_position_tracker.h"
 
 // Global position state
 int32_t x_step_pos = 0;
@@ -31,6 +37,9 @@ void MoveToPosition(float x, float y) {
 
     x_mm_pos = x;
     y_mm_pos = y;
+    
+    // Update position tracker with new position
+    update_position(x, y);
 
     if (a_steps_to_do == b_steps_to_do) {
         for (int i = 0; i < a_steps_to_do; i++) {

@@ -42,6 +42,7 @@ set(SOURCES
     hbot_movement.c
     hbot_grid.c
     hbot_input.c
+    hbot_position_tracker.c
 )
 
 add_executable(HBotCharge ${SOURCES})

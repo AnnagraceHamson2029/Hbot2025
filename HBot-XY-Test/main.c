@@ -3,6 +3,7 @@
 #include "include/hbot_movement.h"
 #include "include/hbot_grid.h"
 #include "include/hbot_input.h"
+#include "include/hbot_position_tracker.h"
 
 int main() {
     // Initialize hardware components
@@ -15,6 +16,9 @@ int main() {
     
     // Initialize grid variables
     init_grid_vars();
+    
+    // Initialize position tracker
+    init_position_tracker();
     
     // Main command processing loop
     while (true) {
