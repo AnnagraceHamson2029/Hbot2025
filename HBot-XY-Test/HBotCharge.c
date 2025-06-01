@@ -35,17 +35,22 @@ float y_mm_pos = 0.0f;
 char mc;
 
 // Configurable Battery Grid vars 
-float fork_y = 10.0f;
-float channel_pad_x = 5.0f;
-float channel_pad_y = 10.0f;
-float edge_x = 10.0f;
-float edge_y = 10.0f;
+float fork_y = 43.561f; // mm from onshape 05/29/25
+// float channel_pad_x = 5.0f;
+float channel_pad_y;
+
 
 // Measured Battery Grid vars 
-float bat_x = 60.0f;
-float bat_y = 20.0f;
+float bat_x = 82.550f;
+float bat_y = 29.972f;
 float xlim_tot = 420.0f;
-float ylim_tot = 375;
+float ylim_tot = 375.0f;
+
+float x_channel;
+float ystep; 
+float xstep;
+int xstep_max; 
+int ystep_max;
 
 // Enable/disable functions removed since enable pins are hardwired
 
@@ -156,40 +161,58 @@ void initialize_hardware() {
     printf("Waiting for serial connection...\n");
 }
 
+void init_grid_vars() {
+    x_channel = (xlim_tot/2.0f); // this is the edge of the channel, not the center position itself
+    //float xlim = xlim_tot - edge_x;
+    //float ylim = ylim_tot - edge_y;
+    //ystep = fork_y+channel_pad_y;
+    xstep = bat_x;// + channel_pad_x;
+    xstep_max = (int)(((xlim_tot/2.0f)-(bat_x/2.0f))/bat_x);
+    ystep_max = (int)ylim_tot/fork_y;
+    channel_pad_y = fmod(ylim_tot,fork_y)/((float)ystep_max);
+    ystep = fork_y+channel_pad_y;
+    ystep_max /= 2; // half are channels for forklift to move
+    ystep_max -= 1;
+    printf("ystep %.2f", ystep);
+}
 void MoveToCenterChannel()
 {
     // Calculated vars
-    float x_channel = (xlim_tot/2.0f) - channel_pad_x;
-    float xlim = xlim_tot - edge_x;
-    float ylim = ylim_tot - edge_y;
-    float ystep = bat_y + channel_pad_y;
-    float xstep = bat_x + channel_pad_x;
-    int xstep_max = (int)xlim/xstep;
-    int ystep_max = (int)ylim/ystep;
+    
+    // float x_channel = (xlim_tot/2.0f); // this is the edge of the channel, not the center position itself
+    // //float xlim = xlim_tot - edge_x;
+    // //float ylim = ylim_tot - edge_y;
+    // float ystep = fork_y+channel_pad_y;
+    // float xstep = bat_x;// + channel_pad_x;
+    // int xstep_max = (int)(((xlim_tot/2.0f)-(bat_x/2.0f))/bat_x);
+    // int ystep_max = (int)ylim_tot/ystep;
+    // new line below for 
+    //float x_channel_pos = x_channel + channel_pad_x;
     MoveToPosition(x_channel, y_mm_pos);
 }
 
 void MoveToCoord(int x, int y)
 {
     // Calculated vars
-    float x_channel = (xlim_tot/2.0f) - channel_pad_x;
-    float xlim = xlim_tot - edge_x;
-    float ylim = ylim_tot - edge_y;
-    float ystep = bat_y + channel_pad_y;
-    float xstep = bat_x + channel_pad_x;
-    int xstep_max = (int)xlim/xstep;
-    int ystep_max = (int)ylim/ystep -2 ;
+    // float x_channel = (xlim_tot/2.0f) - channel_pad_x;
+    // float xlim = xlim_tot - edge_x;
+    // float ylim = ylim_tot - edge_y;
+    // float ystep = bat_y + channel_pad_y;
+    // float xstep = bat_x + channel_pad_x;
+    // int xstep_max = (int)xlim/xstep;
+    // int ystep_max = (int)ylim/ystep -2 ;
     //int fork_x, fork_y; // forklift x/y dimensions in mm
     if (x>xstep_max || y>ystep_max)
     {
-        printf("Coords out of bounds\r\n");
-        printf("Max coords (+/-%d, +%d)\r\n", xstep_max/2, ystep_max);
+        printf("Coords out of bounds, greater than\r\n");
+        printf("Max coords (+/-%d, +%d)\r\n", xstep_max, ystep_max);
+        printf("You tried(+/-%d, +%d)\r\n", x, y);
         return;
     }
     else if (x<-xstep_max || y<0)
     {
-        printf("Coords out of bounds\r\n");
-        printf("Max coords (+/-%d, +%d)\r\n", xstep_max/2, ystep_max);
+        printf("Coords out of bounds, less than\r\n");
+        printf("Max coords (+/-%d, +%d)\r\n", xstep_max, ystep_max);
         return;
     }
     // Move to center channel
@@ -197,63 +220,63 @@ void MoveToCoord(int x, int y)
     {
         MoveToCenterChannel();
         printf("Moved to center channel\r\n");
-        sleep_ms(2000);
+        //sleep_ms(2000);
     }
 
     // Move to desired battery row (y)
-    MoveToPosition(x_mm_pos, (ystep)*y);
+    MoveToPosition(x_mm_pos, (ystep)*y*2);
     printf("Moved to y channel %d\r\n", y);
-    sleep_ms(2000);
+    //sleep_ms(2000);
 
     // Move to desired battery column (x)
     MoveToPosition(x_channel+ xstep*x, y_mm_pos);
     printf("Moved to x channel %d\r\n", x);
-    sleep_ms(2000);
-}
-
-void ScoopBattery()
-{
-    ////// THIS CALCULATION IS WRONGGGGG!!!!!!
-    // Calculated vars
-    float x_channel = (xlim_tot/2.0f) - channel_pad_x;
-    float xlim = xlim_tot - edge_x;
-    float ylim = ylim_tot - edge_y;
-    float ystep = bat_y + channel_pad_y;
-    float xstep = bat_x + channel_pad_x;
-    int xstep_max = (int)xlim/xstep;
-    int ystep_max = (int)ylim/ystep -2;
-    float old_y = y_mm_pos;
-    MoveToPosition(x_mm_pos, y_mm_pos+(channel_pad_y/2.0f));
-    sleep_ms(2000);
-    MoveToPosition(x_mm_pos, old_y);
-    // 2. retreat to channel
-}
-void ScoopBatteryXY(int x, int y)
-{
-    MoveToCoord(x, y);
-    sleep_ms(1000);
-    ScoopBattery();
+    //sleep_ms(2000);
 }
 
 void DepositBattery()
 {
-    // Move to above channel, desposits battery in process
+    ////// THIS CALCULATION IS WRONGGGGG!!!!!!
     // Calculated vars
-    float x_channel = (xlim_tot/2.0f) - channel_pad_x;
-    float xlim = xlim_tot - edge_x;
-    float ylim = ylim_tot - edge_y;
-    float ystep = bat_y + channel_pad_y;
-    float xstep = bat_x + channel_pad_x;
-    int xstep_max = (int)xlim/xstep;
-    int ystep_max = (int)ylim/ystep -2 ;
-    MoveToPosition(x_mm_pos, y_mm_pos-ystep);
+    // float x_channel = (xlim_tot/2.0f) - channel_pad_x;
+    // float xlim = xlim_tot - edge_x;
+    // float ylim = ylim_tot - edge_y;
+    // float ystep = bat_y + channel_pad_y;
+    // float xstep = bat_x + channel_pad_x;
+    // int xstep_max = (int)xlim/xstep;
+    // int ystep_max = (int)ylim/ystep -2;
+    float old_y = y_mm_pos;
+    MoveToPosition(x_mm_pos, y_mm_pos + ystep);//+(channel_pad_y/2.0f));
+    sleep_ms(200);
+    MoveToPosition(x_mm_pos, old_y);
+    // 2. retreat to channel
 }
-
 void DepositBatteryXY(int x, int y)
 {
     MoveToCoord(x, y);
-    sleep_ms(1000);
+    //sleep_ms(1000);
     DepositBattery();
+}
+
+void ScoopBattery()
+{
+    // Move to above channel, desposits battery in process
+    // Calculated vars
+    // float x_channel = (xlim_tot/2.0f) - channel_pad_x;
+    // float xlim = xlim_tot - edge_x;
+    // float ylim = ylim_tot - edge_y;
+    // float ystep = bat_y + channel_pad_y;
+    // float xstep = bat_x + channel_pad_x;
+    // int xstep_max = (int)xlim/xstep;
+    // int ystep_max = (int)ylim/ystep -2 ;
+    MoveToPosition(x_mm_pos, y_mm_pos + 2.0f*ystep);
+}
+
+void ScoopBatteryXY(int x, int y)
+{
+    MoveToCoord(x, y);
+    //sleep_ms(1000);
+    ScoopBattery();
 }
 
 void process_position_input() {
@@ -262,15 +285,15 @@ void process_position_input() {
     int pos = 0;
     int c;
 
-    float x_channel = (xlim_tot/2.0f) - channel_pad_x;
-    float xlim = xlim_tot - edge_x;
-    float ylim = ylim_tot - edge_y;
-    float ystep = bat_y + channel_pad_y;
-    float xstep = bat_x + channel_pad_x;
-    int xstep_max = (int)xlim/xstep;
-    int ystep_max = (int)ylim/ystep - 2;
+    // float x_channel = (xlim_tot/2.0f) - channel_pad_x;
+    // float xlim = xlim_tot - edge_x;
+    // float ylim = ylim_tot - edge_y;
+    // float ystep = bat_y + channel_pad_y;
+    // float xstep = bat_x + channel_pad_x;
+    // int xstep_max = (int)xlim/xstep;
+    // int ystep_max = (int)ylim/ystep - 2;
 
-    printf("Max battery coords (+/-%d, +%d)\r\n", xstep_max/2, ystep_max);
+    printf("Max battery coords (+/-%d, +%d)\r\n", xstep_max, ystep_max);
     printf("Max mm coords (%.1f, %.1f)\r\n", xlim_tot, ylim_tot);
 
     printf("Enter coordinates: ");
@@ -331,14 +354,14 @@ void process_position_input() {
                 case 'b':
                 {
                     printf("Moving to battery coordinates (%.1f, %.1f)...\n", x, y);
-                    MoveToCoord((int)x, (int)y+2);
+                    MoveToCoord((int)x, (int)y);
                     printf("Movement complete!\n");
                     break;
                 }
                 case 'd':
                 {
                     printf("Depositing battery at coordinates (%.1f, %.1f)...\n", x, y);
-                    DepositBatteryXY((int)x, (int)y+2);
+                    DepositBatteryXY((int)x, (int)y);
                     printf("Battery is on charge!\n");
                     mc = 'r';
                     break;
@@ -347,7 +370,7 @@ void process_position_input() {
                 case 'p':
                 {
                     printf("Retrieving battery from coordinates (%.1f, %.1f)...\n", x, y);
-                    ScoopBatteryXY((int)x, (int)y+2);
+                    ScoopBatteryXY((int)x, (int)y);
                     printf("Battery Retrieved!\n");
                     mc = 'r';
                     break;
@@ -362,13 +385,13 @@ void process_position_input() {
 
 void exec_switch() {
     // Calculated vars
-    float x_channel = (xlim_tot/2.0f) - channel_pad_x;
-    float xlim = xlim_tot - edge_x;
-    float ylim = ylim_tot - edge_y;
-    float ystep = bat_y + channel_pad_y;
-    float xstep = bat_x + channel_pad_x;
-    int xstep_max = (int)xlim/xstep;
-    int ystep_max = (int)ylim/ystep;
+    // float x_channel = (xlim_tot/2.0f) - channel_pad_x;
+    // float xlim = xlim_tot - edge_x;
+    // float ylim = ylim_tot - edge_y;
+    // float ystep = bat_y + channel_pad_y;
+    // float xstep = bat_x + channel_pad_x;
+    // int xstep_max = (int)xlim/xstep;
+    // int ystep_max = (int)ylim/ystep;
     switch (mc) {
         case 'r':
         {
@@ -479,35 +502,6 @@ void process_switch_input() {
     }
 }
 
-// void initialize_battery_channels(float des_xstep, float des_ystep) {
-//     // Define Constants
-//     int fork_x, fork_y; // forklift x/y dimensions in mm
-//     int edge_x, edge_y, channel_width_x; // in mm
-//     int bat_x, bat_y, bat_offset_x, batt_offset_y; // battery x, y
-//     int xlim_tot = 420;
-//     int ylim_tot = 375;
-//     int xlim = xlim_tot - edge_x;
-//     int ylim = ylim_tot - edge_y;
-//     int ystep = bat_y + batt_offset_y;
-//     int xstep = bat_x + bat_offset_x;
-//     int xstep_max = xlim/xstep;
-//     int ystep_max = ylim/ystep;
-//     // assume start at 0,0
-//     if ((des_xstep <= xstep_max) && (des_ystep <= ystep_max))
-//     {
-//         float xpos = des_xstep*xstep;
-//         float ypos = des_ystep*ystep;
-//         MoveToPosition(xpos, 0);
-//         printf("Move to center chanell")
-//         sleep_ms(2000);
-//     }
-//     else
-//     {
-//         printf("Desired battery position DNE; outside bounds");
-//     }
-//     // to get to battery at position 2:
-//     // 1. check position rel to position 2
-// }
 
 int main() {
     // Initialize hardware components
@@ -517,6 +511,8 @@ int main() {
     while (!stdio_usb_connected()) {
         sleep_ms(100);  // Check every 100ms
     }
+    
+    init_grid_vars();
     
     // Main command processing loop
     while (true) {
