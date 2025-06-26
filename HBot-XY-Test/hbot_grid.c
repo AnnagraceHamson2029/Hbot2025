@@ -147,3 +147,91 @@ void ScoopBatteryXY(int x, int y) {
         ScoopBattery();
     }
 }
+
+void Align() {
+    float old_y = y_mm_pos;
+    MoveToPosition(x_mm_pos, y_mm_pos + ystep);
+    sleep_ms(200);
+    //MoveToPosition(x_mm_pos, old_y);
+}
+
+void AlignXY(int x, int y) {
+    // Get current grid position
+    int current_x, current_y;
+    bool in_grid;
+    get_current_grid_position(&current_x, &current_y, &in_grid);
+    
+    // Check if we're already at the target position
+    if (in_grid && current_x == x && current_y == y) {
+        printf("Already at position (%d, %d), aligning to charging location\r\n", x, y);
+        // We're already at the right spot, just deposit
+        Align();
+    } else {
+        // Need to move to the position first
+        MoveToCoord(x, y);
+        Align();
+    }
+}
+
+void ppBatteryXY(int xp, int yp, int xd, int yd)
+{
+    ScoopBatteryXY(xp, yp);
+    DepositBatteryXY(xd, yd);
+    printf("Move from (%d, %d) to (%d, %d)\n", xp, yp, xd, yd);
+}
+
+int wrap(int i) {
+    return (i + 8) % 8;
+}
+
+void RunGamut() {
+    const int posX[8] = {-2, -1, 1, 2, 2, 1, -1, -2};
+    const int posY[8] = { 3,  3, 3, 3, 0, 0,  0,  0};
+    int board[8] = {0, 1, 2, 3, 4, 5, -1, -1};
+    // ppBatteryXY(2, 3, -1, 3);
+    // ppBatteryXY(1, 0, 2, 3);
+    // ppBatteryXY(-2, 0, 1, 0);
+    // ppBatteryXY(1, 3, -2, 3);
+    int original[8];
+    memcpy(original, board, sizeof(board));
+
+    int moves = 0;
+    int maxMoves = 100;
+
+    do {
+        int moved = 0;
+        for (int i = 0; i < 8; ++i) {
+            if (board[i] != -1) {
+                int over = wrap(i + 1);
+                int dest = wrap(i + 2);
+
+                if (board[over] != -1 && board[dest] == -1) {
+                    // Perform the jump
+                    ppBatteryXY(posX[i], posY[i], posX[dest], posY[dest]);
+                    board[dest] = board[i];
+                    board[i] = -1;
+                    moved = 1;
+                    break; // one move per step
+                }
+            }
+        }
+        if (!moved) break;
+        moves++;
+    } while (memcmp(board, original, sizeof(board)) != 0 && moves < maxMoves);
+
+    if (memcmp(board, original, sizeof(board)) == 0) {
+        printf("Cycle completed in %d moves\n", moves);
+    } else {
+        printf("Did not return to original state after %d moves\n", moves);
+    }
+
+    // ScoopBatteryXY(-2, 0); 
+    // DepositBatteryXY(2, 0);
+    // ScoopBatteryXY(2, 3);
+    // DepositBatteryXY(-2, 3);
+    // ScoopBatteryXY(2, 0);
+    // DepositBatteryXY(2, 3);
+    // ScoopBatteryXY(-2, 3);
+    // DepositBatteryXY(-2, 0);
+    
+}

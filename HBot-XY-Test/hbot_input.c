@@ -1,6 +1,8 @@
 #include "include/hbot_input.h"
 #include "include/hbot_movement.h"
 #include "include/hbot_grid.h"
+#include "include/hbot_hardware.h"
+//#include "include/drone_swap_hw.h"
 
 // Switch state
 char mc;
@@ -92,9 +94,63 @@ void process_position_input() {
                     mc = 'r';
                     break;
                 }
+                case 'a':
+                {
+                    printf("Moving to battery loc at coordinates (%.1f, %.1f)...\n", x, y);
+                    AlignXY((int)x, (int)y);
+                    printf("Ready to align!\n");
+                    mc = 'r';
+                    break;
+                }
             }
             
-        } else {
+        } 
+        else if (sscanf(cmd, "%f", &x) == 1) {
+            switch (mc) {
+                case 'l':
+                {
+                    printf("Moving lead screw C %.f mm\r\n",x);
+                    MMStep_LeadScrewCD(0, x, 0);
+                    break;
+                }
+                case 'k': {
+                    printf("Moving lead screw D %.f mm\r\n", x);
+                    MMStep_LeadScrewCD(1, x, 0);
+                    break;
+                }
+                case 'j': {
+                    printf("Moving lead screw C back %.f mm\r\n", x);
+                    MMStep_LeadScrewCD(0, x, 1);
+                    break;
+                }
+                case 'h': {
+                    printf("Moving lead screw D back %.f mm\r\n", x);
+                    MMStep_LeadScrewCD(1, x, 1);
+                    //MMStep_LeadScrewCD(1, x, 1);
+                    break;
+                }
+                case 'g': {
+                    printf("Moving lead screw E fwd %.f mm\r\n", x);
+                    MMStep_LeadScrewCD(2, x, 0);
+                    //MMStep_LeadScrewCD(1, x, 1);
+                    break;
+                }
+                case 'f': {
+                    printf("Moving lead screw E back %.f mm\r\n", x);
+                    MMStep_LeadScrewCD(2, x, 1);
+                    //MMStep_LeadScrewCD(1, x, 1);
+                    break;
+                }
+                case 'q':
+                {
+                    MMStep_LeadScrewCD(2, x, 1);
+                    MMStep_LeadScrewCD(0, x, 0);
+                    sleep_ms(2000);
+                    MMStep_LeadScrewCD(1, 50, 0);
+                }
+            }
+        }
+        else {
             printf("Error: Invalid format. Please enter two numbers: X Y\n");
         }
     }
@@ -121,10 +177,23 @@ void exec_switch() {
             MoveToCenterChannel();
             break;
         }
+        case 't':
+        {
+            RunGamut();
+            break;
+        }
         case 'm':
         case 'b':
         case 'd':
         case 'p':
+        case 'a':
+        case 'l':
+        case 'k':
+        case 'j':
+        case 'h':
+        case 'g':
+        case 'f':
+        case 'q':
         {
             process_position_input();
             break;
@@ -142,6 +211,15 @@ void process_switch_input() {
     printf("r: reset position \t c: move to center channel\r\n");
     printf("m: mm coordinate mode \t b: battery coordinate mode\r\n");
     printf("p: battery pickup mode \t d: battery deposit mode\r\n");
+    printf("a: align grid mode \t t: test (cycle batteries)\r\n");
+    printf("___________________________________\r\n");
+    printf("l: Enter coordinates for lead screw motor C fwd\r\n");
+    printf("k: Enter coordinates for lead screw motor D fwd\r\n");
+    printf("j:  Enter coordinates for lead screw motor C back \r\n");
+    printf("h:  Enter coordinates for lead screw motor D back\r\n");
+    printf("g:  Enter coordinates for lead screw motor E fwd \r\n");
+    printf("f:  Enter coordinates for lead screw motor E back\r\n");
+
     memset(buffer, 0, sizeof(buffer));
 
     // process buffer

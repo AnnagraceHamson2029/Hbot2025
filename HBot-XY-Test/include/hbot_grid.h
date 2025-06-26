@@ -21,4 +21,13 @@ void ScoopBattery(void);
 // Scoop battery at specific coordinates
 void ScoopBatteryXY(int x, int y);
 
+void RunGamut(void);
+
+// Align over battery charging location from channel
+void Align(void);
+
+// Align battery at specific coordinates
+void AlignXY(int x, int y);
+
+
 #endif // HBOT_GRID_H

@@ -14,11 +14,18 @@
 // Manually calibrate to origin before power on
 
 // Constants
-#define STEPS_PER_MM 80
+#define STEPS_PER_MM 40 // was 80 with 3200 ppr is 40 with 1600 ppr
 #define MMPERSTEP (1.0f / STEPS_PER_MM)
 
+#define STEPS_PER_MM_2 200
+#define STEP_PULSE_US 3      // pulse width in microseconds
+#define MIN_DELAY_US 400     // fastest delay between steps
+#define MAX_DELAY_US 2000    // slowest (starting) delay
+#define ACCEL_STEP_US 5      // ho
+
+
 // Speed control - single parameter
-#define STEP_PULSE_WIDTH 20  // Time in microseconds for each pulse (higher = slower)
+#define STEP_PULSE_WIDTH 20//15  // Time in microseconds for each pulse (higher = slower)
 
 // Stepper motor A
 #define DIR_A 14
@@ -27,6 +34,19 @@
 // Stepper motor B
 #define DIR_B 16
 #define STEP_B 17
+
+// Lead Screw 1: Push motor C
+#define DIR_C 18
+#define STEP_C 19
+
+// Lead Screw 2: Dead Battery motor D
+#define DIR_D 20
+#define STEP_D 21
+
+// Lead Screw 3: Drone landing motor E
+#define DIR_E 26
+#define STEP_E 27
+
 
 // Global position state (extern here, defined in hbot_movement.c)
 extern int32_t x_step_pos;
