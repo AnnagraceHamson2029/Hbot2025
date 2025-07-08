@@ -180,22 +180,99 @@ void MMStep_LeadScrewCD(int a, float mm, int direction) {
             }
         }
     }
-    else if (a == 3)
-    {
-        gpio_put(DIR_E, direction);  // Set direction
-        for (int i = 0; i < steps; i++) {
-            // Generate step pulse
-            gpio_put(STEP_E, 0);
-            sleep_us(delay_us);
-            gpio_put(STEP_E, 1);
-            sleep_us(STEP_PULSE_US);
+    sleep_us(STEP_PULSE_US);
+}
 
-            if (delay_us > MIN_DELAY_US) {
-                delay_us -= ACCEL_STEP_US;  // linear acceleration
-                if (delay_us < MIN_DELAY_US) delay_us = MIN_DELAY_US;
-            }
+int OneStep_LeadScrew(int a, int direction, int del) {
+
+    if (a == 0) {
+        gpio_put(DIR_C, direction);
+        gpio_put(STEP_C, 0);
+        sleep_us(del);
+        gpio_put(STEP_C, 1);
+        sleep_us(STEP_PULSE_US);
+    }
+    else if (a==1) {
+        gpio_put(DIR_D, direction);
+        gpio_put(STEP_D, 0);
+        sleep_us(del);
+        gpio_put(STEP_D, 1);
+        sleep_us(STEP_PULSE_US);
+    }
+    else if (a==2) {
+        gpio_put(DIR_E, direction);
+        gpio_put(STEP_E, 0);
+        sleep_us(del);
+        gpio_put(STEP_E, 1);
+        sleep_us(STEP_PULSE_US);
+    }
+
+    if (del > MIN_DELAY_US) {
+        del -= ACCEL_STEP_US;  // linear acceleration
+        if (del < MIN_DELAY_US) del = MIN_DELAY_US;
+    }
+    return del;
+}
+
+void simStep(int a, int dira, int b, int dirb, int mma, int mmb) {
+    int stepsa = (int)(mma * STEPS_PER_MM_2);
+    int stepsb = (int)(mmb * STEPS_PER_MM_2);
+    int delay_us = MAX_DELAY_US;
+
+    int primary_motor, secondary_motor;
+    int steps_primary, steps_secondary;
+    int dir_primary, dir_secondary;
+
+    if (stepsa > stepsb) {
+        primary_motor = a;
+        secondary_motor = b;
+        steps_primary = stepsa;
+        steps_secondary = stepsb;
+        dir_primary = dira;
+        dir_secondary = dirb;
+    } else {
+        primary_motor = b;
+        secondary_motor = a;
+        steps_primary = stepsb;
+        steps_secondary = stepsa;
+        dir_primary = dirb;
+        dir_secondary = dira;
+    }
+
+    int error = 0;
+    for (int i = 0; i < steps_primary; i++) {
+        delay_us = OneStep_LeadScrew(primary_motor, dir_primary, delay_us);
+        error += steps_secondary;
+        if (2 * error >= steps_primary) {
+            delay_us = OneStep_LeadScrew(secondary_motor, dir_secondary, delay_us);
+            error -= steps_primary;
         }
     }
-    sleep_us(STEP_PULSE_US);
-    
 }
+
+
+// void simStep(int a, int dira, int b, int dirb, int mma, int mmb) {
+//     int stepsa = (int)(mma * STEPS_PER_MM_2);
+//     int stepsb = (int)(mmb * STEPS_PER_MM_2);
+//     int delay_us = MAX_DELAY_US;
+//     if (mma<mmb) {
+//         for (int i = 0; i < stepsa; i++) {
+//             OneStep_LeadScrew(a, dira, delay_us);
+//             delay_us = OneStep_LeadScrew(b, dirb, delay_us);
+//         }
+//         for (int i = 0; i < stepsb-stepsa; i++) {
+//             delay_us = OneStep_LeadScrew(b, dirb, delay_us);
+//         }
+//     }
+//     else {
+//         for (int i = 0; i < stepsb; i++) {
+//             OneStep_LeadScrew(b, dirb, delay_us);
+//             delay_us = OneStep_LeadScrew(a, dira, delay_us);
+//         }
+//         for (int i = 0; i < stepsb-stepsa; i++) {
+//             delay_us = OneStep_LeadScrew(a, dira, delay_us);
+//         }
+//     }
+
+// }
+

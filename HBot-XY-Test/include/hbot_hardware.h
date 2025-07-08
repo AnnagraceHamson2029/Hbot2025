@@ -16,4 +16,6 @@ void initialize_drone_swap_hardware(void);
 // Pulse to mm length in a direction on motor 'a'
 void MMStep_LeadScrewCD(int a, float mm, int direction);
 
+void simStep(int a, int dira, int b, int dirb, int mma, int mmb);
+
 #endif // HBOT_HARDWARE_H

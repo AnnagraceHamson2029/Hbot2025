@@ -4,7 +4,7 @@
 #include "include/hbot_grid.h"
 #include "include/hbot_input.h"
 #include "include/hbot_position_tracker.h"
-#include "include/drone_swap_hw.h"
+
 
 int main() {
     // Initialize hardware components
