@@ -103,8 +103,8 @@ void MoveToCoord(int x, int y) {
 
 void DepositBattery() {
     float old_y = y_mm_pos;
-    MoveToPosition(x_mm_pos, y_mm_pos + ystep);
-    sleep_ms(200);
+    MoveToPosition(x_mm_pos, y_mm_pos + ystep + 5);
+    sleep_ms(500);
     MoveToPosition(x_mm_pos, old_y);
 }
 
@@ -187,7 +187,7 @@ int wrap(int i) {
 void RunGamut() {
     const int posX[8] = {-2, -1, 1, 2, 2, 1, -1, -2};
     const int posY[8] = { 3,  3, 3, 3, 0, 0,  0,  0};
-    int board[8] = {0, 1, 2, 3, 4, 5, -1, -1};
+    int board[8] = {0, 1, 2, 3, -1, 4, 5, -1};
     // ppBatteryXY(2, 3, -1, 3);
     // ppBatteryXY(1, 0, 2, 3);
     // ppBatteryXY(-2, 0, 1, 0);
@@ -224,14 +224,5 @@ void RunGamut() {
     } else {
         printf("Did not return to original state after %d moves\n", moves);
     }
-
-    // ScoopBatteryXY(-2, 0); 
-    // DepositBatteryXY(2, 0);
-    // ScoopBatteryXY(2, 3);
-    // DepositBatteryXY(-2, 3);
-    // ScoopBatteryXY(2, 0);
-    // DepositBatteryXY(2, 3);
-    // ScoopBatteryXY(-2, 3);
-    // DepositBatteryXY(-2, 0);
     
 }

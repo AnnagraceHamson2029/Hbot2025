@@ -25,27 +25,32 @@
 
 
 // Speed control - single parameter
-#define STEP_PULSE_WIDTH 20//15  // Time in microseconds for each pulse (higher = slower)
+#define STEP_PULSE_WIDTH 40//15  // Time in microseconds for each pulse (higher = slower)
 
 // Stepper motor A
-#define DIR_A 14
-#define STEP_A 15
+#define DIR_A 16
+#define STEP_A 17
+//#define EN_A 9
 
 // Stepper motor B
-#define DIR_B 16
-#define STEP_B 17
+#define DIR_B 18
+#define STEP_B 19
+//#define EN_B 10
 
 // Lead Screw 1: Push motor C
-#define DIR_C 18
-#define STEP_C 19
+#define DIR_C 12
+#define STEP_C 11
+#define EN_C 10
 
 // Lead Screw 2: Dead Battery motor D
-#define DIR_D 20
-#define STEP_D 21
+#define DIR_D 9
+#define STEP_D 8
+#define EN_D 7
 
 // Lead Screw 3: Drone landing motor E
-#define DIR_E 26
-#define STEP_E 27
+#define DIR_E 15
+#define STEP_E 14
+#define EN_E 13
 
 
 // Global position state (extern here, defined in hbot_movement.c)
